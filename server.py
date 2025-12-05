@@ -2,8 +2,8 @@ import socket
 
 STOP = '900/'.encode('utf-8')
 SEND = '900/1'.encode('utf-8')
-TURNO = '200/'.encode('utf-8')
-ESITO = '100/'.encode('utf-8')
+TURNO = '200/'.encode('utf-8') # griglia, editMode
+ESITO = '100/'.encode('utf-8') # 1 | vincita X ; 2 | vincita O ; 3 | pareggio
 MARKER = '0/'.encode('utf-8')
 
 def getPorta() -> int:
@@ -29,7 +29,7 @@ class Server:
         print(f'Server in ascolto su porta {self.PORTA}')
         self.server.listen()
 
-        # connessione client
+        # connessione clients
         self.conn1, self.ip1 = self.server.accept()
         print(f'> Connessione con {self.ip1} avvenuta con successo!')
         self.conn2, self.ip2 = self.server.accept()
@@ -68,49 +68,70 @@ class Server:
         riga = ['0' for _ in range(l)]
         griglia = [riga for _ in range(l)]
         return griglia
+
+    def controllaArray(self, lista, esito) -> str:
+        if elementiUguali(lista) and lista[0] != '0':
+            return lista[0]
+        return esito
     
-    def analisiGriglia(self, griglia):
-        vincitore = ''
+    def analisiGriglia(self, griglia) -> str:
+        esito = ''
+        conta_vuoti = 0
+        
         for i, riga in enumerate(griglia):
-            # controllo righe
-            if elementiUguali(riga) and riga[0] != '0':
-                vincitore = riga[0]
-                print(riga)
+            numero_vuoti = riga.count('0')
+            conta_vuoti += numero_vuoti
+
+            esito = self.controllaArray(riga, esito)
     
             # controllo colonne
             colonna = [r[i] for r in griglia]
-            if elementiUguali(colonna) and colonna[0] != '0':
-                vincitore = colonna[0]
-                print(colonna)
+            esito = self.controllaArray(colonna, esito)
     
         # controllo diagonali
         diagonale1 = [griglia[k][k] for k in range(len(griglia))]
+        esito = self.controllaArray(diagonale1, esito)
+        
         diagonale2 = [griglia[k][(k*(-1))-1] for k in range(len(griglia))]
-    
-        if elementiUguali(diagonale1) and diagonale1[0] != '0':
-            vincitore = diagonale1[0]
-        elif elementiUguali(diagonale2) and diagonale2[0] != '0':
-            vincitore = diagonale2[0]
-            print(diagonale2)
-    
-        if vincitore:
-            self.conn1.sendall(ESITO + vincitore)
-            self.conn2.sendall(ESITO + vincitore)
-    
-        print(f'vincitore: {vincitore}')
+        esito = self.controllaArray(diagonale2, esito)
+
+        # controllo pareggio
+        if not conta_vuoti:
+            esito = '3'
+
+        print(f'$ esito: {esito}')
+        return esito
+
+    def formattaGriglia(self, griglia) -> str:
+        for riga in griglia:
+            formatG.append(','.join(riga))
+        formatG = ';'.join(formatG)
+        return formatG
+
+    def estraiGriglia(self, grigliaF):
+        griglia = []
+        for rigaF in grigliaF.split(';'):
+            griglia.append(rigaF.split(',')
+        return griglia
 
     def gameLoop(self, griglia) -> None:
+        while game:
+            griglia = self.formattaGriglia(griglia)
 
-        self.conn1.sendall(SEND)
-        griglia = self.conn1.recv(1024)
-        self.conn1.sendall(STOP)
-        self.conn2.sendall(griglia)
+            # TURNO CLIENT 1
+            self.conn1.sendall(f'{TURNO}{griglia}/1') # invio griglia e attesa di risposta 
+            self.conn2.sendall(f'{TURNO}{griglia}/0') # invio griglia per solo display
+            
+            griglia = self.conn1.recv(1024).decode()
+            self.analisiGriglia(griglia)
+            griglia = self.formattaGriglia(griglia)
 
-        self.conn1.sendall(SEND)
-        griglia = self.conn1.recv(1024)
-        self.conn1.sendall(STOP)
-        self.conn2.sendall(griglia)
-
+            # TURNO CLIENT 2
+            self.conn2.sendall(TURNO + griglia)
+            griglia = self.conn2.recv(1024).decode()
+            griglia = self.formattaGriglia(griglia)
+            self.conn1.sendall(griglia)
+        
 # dopo collegamento client aspettano uno stato : STOP o SEND
 # STOP: solo ascolto
 # SEND: acquisizione ed invio di mossa del giocatore
@@ -118,6 +139,8 @@ class Server:
 # es. grid : [X, O, None, ...]
 
 # MAIN
+
+# self.conn2.sendall(ESITO + vincitore)
 
 
 
