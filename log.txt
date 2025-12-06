@@ -1,0 +1,9 @@
+
+SERVER > b'0/1'
+SERVER > b'0/2'
+CLIENT > b'OK'
+CLIENT > b'OK'
+SERVER > b'200/0,0,0;0,0,0;0,0,0/1'
+SERVER > b'200/0,0,0;0,0,0;0,0,0/0'
+SERVER > b'100/3'
+SERVER > b'100/3'

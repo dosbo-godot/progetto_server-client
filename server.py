@@ -1,10 +1,19 @@
 import socket
 
-STOP = '900/'.encode('utf-8')
-SEND = '900/1'.encode('utf-8')
-TURNO = '200'.encode('utf-8') # griglia, editMode
-ESITO = '100'.encode('utf-8') # 1 | vincita X ; 2 | vincita O ; 3 | pareggio
-MARKER = '0'.encode('utf-8')
+_sendall_originale = socket.socket.sendall
+
+def sendall_decorato(self, data, *args, **kwargs):
+    with open('log.txt', 'a') as f:
+        f.write(f'\nSERVER > {data}')
+    return _sendall_originale(self, data, *args, **kwargs)
+
+socket.socket.sendall = sendall_decorato
+
+STOP = '900/'
+SEND = '900/1'
+TURNO = '200'# griglia, editMode
+ESITO = '100' # 1 | vincita X ; 2 | vincita O ; 3 | pareggio
+MARKER = '0'
 
 def getPorta() -> int:
     with open('ultima_porta.txt') as file:
@@ -32,6 +41,7 @@ class Server:
     def __init__(self) -> None:
         self.PORTA = getPorta()
         self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.server.setblocking(True)
         self.server.bind(('127.0.0.1', self.PORTA))
         print(f'Server in ascolto su porta {self.PORTA}')
         self.server.listen()
@@ -165,5 +175,7 @@ class Server:
 
 # main
 
+with open('log.txt', 'w'):
+    pass
 s = Server()
 print(s)

@@ -1,5 +1,14 @@
 import socket
 
+_sendall_originale = socket.socket.sendall
+
+def sendall_decorato(self, data, *args, **kwargs):
+    with open('log.txt', 'a') as f:
+        f.write(f'\nCLIENT > {data}')
+    return _sendall_originale(self, data, *args, **kwargs)
+
+socket.socket.sendall = sendall_decorato
+
 def rimanda(func) -> callable:
     def nuovaFunc(self, *args, **kwargs):
         risultato = func(self, *args, **kwargs)
@@ -14,16 +23,20 @@ class Client:
         print(f'\nConnessione con server su porta {PORTA} avvenuta con successo!')
         print(f'\nIn attesa di un altro client su porta {PORTA} per appaiamento ...')
 
-        # TABELLA EVENTI
+        # TABELLA EVENTI 
         self.eventi = {'0'   :   self.appaiamento,
                     '100'   :   self.turno,
                     '200'   :   self.esito}
 
+        self.statoFondamentale()
+
     def statoFondamentale(self):
+        print('a')
         # ATTESA
         data = self.client.recv(128).decode(encoding='utf-8')
+        print(data)
 
-        data.split('/')
+        data = data.split('/')
         evento = data[0]
         argomenti = data[1:]
 
@@ -33,7 +46,9 @@ class Client:
     @rimanda
     def appaiamento(self, argomenti):
         self.marker = argomenti[0]
+        self.client.sendall('OK'.encode())
         print('$ COLLEGAMENTO CLIENT-SERVER-CLIENT avvenuto con SUCCESSO')
+
 
     @rimanda
     def esito(self, argomenti):
@@ -52,6 +67,9 @@ class Client:
             griglia = self.applicaMossa(griglia, mossa)
             griglia = self.formattaGriglia(griglia)
             self.client.sendall(griglia)
+
+            with open('log.txt', 'a') as f:
+                f.write(f'\CLIENT {self.marker} > {griglia}')
         
     def mostraGriglia(self, griglia):
         for i, riga in enumerate(griglia):
