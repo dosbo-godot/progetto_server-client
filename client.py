@@ -1,4 +1,5 @@
 import socket
+import tkinter
 
 _sendall_originale = socket.socket.sendall
 
@@ -25,16 +26,17 @@ class Client:
 
         # TABELLA EVENTI 
         self.eventi = {'0'   :   self.appaiamento,
-                    '100'   :   self.turno,
-                    '200'   :   self.esito}
+                    '200'   :   self.turno,
+                    '100'   :   self.esito}
 
         self.statoFondamentale()
 
     def statoFondamentale(self):
-        print('a')
         # ATTESA
         data = self.client.recv(128).decode(encoding='utf-8')
-        print(data)
+        if not data:
+            self.chiudi()
+            return
 
         data = data.split('/')
         evento = data[0]
@@ -62,11 +64,11 @@ class Client:
         edit_mode = argomenti[1]
 
         self.mostraGriglia(griglia)
-        if edit_mode:
+        if edit_mode == '1':
             mossa = self.ottieniMossa()
-            griglia = self.applicaMossa(griglia, mossa)
+            self.applicaMossa(griglia, mossa)
             griglia = self.formattaGriglia(griglia)
-            self.client.sendall(griglia)
+            self.client.sendall(griglia.encode())
 
             with open('log.txt', 'a') as f:
                 f.write(f'\CLIENT {self.marker} > {griglia}')
@@ -77,7 +79,7 @@ class Client:
             print(riga_format)
 
             if i != (len(griglia)-1):
-                print('-'*20)
+                print('-'*40)
     
     def applicaMossa(self, griglia, mossa):
         riga = mossa[0]
@@ -99,9 +101,76 @@ class Client:
             griglia.append(rigaF.split(','))
         return griglia
 
+    def ottieniMossa(self):
+        mossa = input('inserisci mossa: ')
+        mossa = mossa.split(',')
+        mossa = [int(x) for x in mossa]
+        return mossa
+    
+    def chiudi(self):
+        print(f'\n$ COMUNICAZIONE CON SERVER TERMINATA')
+        self.client.close()
 
+class GUI:
+    def __init__(self, l = 3):
+        self.paginaIniziale()
+    
+    def paginaIniziale(self):
+        # ---- FINESTRA PRINCIPALE ----
+        root = tkinter.Tk()
+        root.title("Tris Online")
+        root.geometry("400x500")
+        root.configure(bg="#eeeeee")  # sfondo generale
+
+        # ---- NAVBAR ----
+        navbar = tkinter.Frame(root, bg="#303F9F", height=60)
+        navbar.pack(fill="x")
+
+        title_label = tkinter.Label(
+            navbar,
+            text="TRIS ONLINE",
+            fg="white",
+            bg="#303F9F",
+            font=("Arial", 24, "bold")
+        )
+        title_label.pack(pady=10)
+
+        # ---- MESSAGGIO ----
+        msg_box = tkinter.Label(
+            root,
+            text="",
+            font=("Arial", 14),
+            bg="#eeeeee"
+        )
+        msg_box.pack(pady=20)
+
+        # ---- FRAME GRIGLIA ----
+        griglia_frame = tkinter.Frame(root, bg="#eeeeee")
+        griglia_frame.pack()
+
+        # ---- BOTTONI 3x3 ----
+        bottoni = []
+        for r in range(3):
+            row = []
+            for c in range(3):
+                bottone = tkinter.Button(
+                    griglia_frame,
+                    text="",
+                    width=6,
+                    height=3,
+                    font=("Arial", 24),
+                    bg="white"
+                )
+                bottone.grid(row=r, column=c, padx=5, pady=5)
+                row.append(bottone)
+            bottoni.append(row)
+
+        # Avvio finestra
+        root.mainloop()
 
 with open('ultima_porta.txt', 'r') as file:
     PORTA = int(file.read())
 
-c = Client()
+# MAIN
+g = GUI()
+#c = Client()

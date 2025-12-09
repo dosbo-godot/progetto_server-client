@@ -24,7 +24,6 @@ def getPorta() -> int:
         else:
             PORTA = 5000
         file.write(str(PORTA))
-        print(PORTA)
     return PORTA
 
 def elementiUguali(lista):
@@ -51,8 +50,6 @@ class Server:
         print(f'> Connessione con {self.ip1} avvenuta con successo!')
         self.conn2, self.ip2 = self.server.accept()
         print(f'> Connessione con {self.ip2} avvenuta con successo!')
-
-        self.assettoIniziale()
     
     def __repr__(self) -> str:
         s = f'\n\n======== SERVER SU PORTA {self.PORTA} ========'
@@ -115,7 +112,7 @@ class Server:
         risultato = self.controllaArray(diagonale2, risultato)
 
         # controllo pareggio
-        if not conta_vuoti:
+        if conta_vuoti == 0:
             risultato = '3'
 
         print(f'$ esito: {risultato}')
@@ -162,9 +159,6 @@ class Server:
             griglia  = self.estraiGriglia(griglia)
             game = self.analisiGriglia(griglia)
             if game: break
-
-            nuovo_turno = input(f'esegurie turno?\n>> ')
-            continuo = bool(nuovo_turno)
         self.arresta()
     
     def arresta(self):
@@ -179,3 +173,4 @@ with open('log.txt', 'w'):
     pass
 s = Server()
 print(s)
+s.assettoIniziale()
