@@ -115,10 +115,10 @@ class Server:
         if conta_vuoti == 0:
             risultato = '3'
 
-        print(f'$ esito: {risultato}')
         if risultato:
-            self.conn1.sendall(formatMesg(ESITO, risultato))
-            self.conn2.sendall(formatMesg(ESITO, risultato))
+            print(f'\n$ esito: {risultato}')
+            self.conn1.sendall(formatMesg(ESITO, risultato, self.formattaGriglia(griglia)))
+            self.conn2.sendall(formatMesg(ESITO, risultato, self.formattaGriglia(griglia)))
         return risultato
 
     def formattaGriglia(self, griglia) -> str:
@@ -159,6 +159,7 @@ class Server:
             griglia  = self.estraiGriglia(griglia)
             game = self.analisiGriglia(griglia)
             if game: break
+        
         self.arresta()
     
     def arresta(self):
