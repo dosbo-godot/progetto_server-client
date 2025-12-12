@@ -1,3 +1,0 @@
-utente dovrà inserire manualmente porta, dato input shell cmd
--> PORTA UTILIZZATA : 5001
--> INSERIRE IN ENTRAMBI I CLIENT PER APPAIAMENTO 
